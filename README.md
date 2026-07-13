@@ -3,7 +3,7 @@
 **Rich Rarey**  
 Created May 17, 2026 · Updated July 13, 2026
 
-`batch_audio_download.sh` is a macOS/Linux command-line utility that downloads audio from online videos using `yt-dlp` and converts it to a configurable audio format with FFmpeg.
+`batch_audio_download` is a macOS/Linux command-line utility that downloads audio from online videos using `yt-dlp` and converts it to a configurable audio format with FFmpeg.
 
 It accepts either a small number of URLs directly on the command line or a text file containing many URLs. Each URL is processed separately, with progress reporting and a final success/failure summary.
 
@@ -51,14 +51,14 @@ cd /path/to/batch-audio-download
 Give the script execute permission:
 
 ```bash
-chmod +x batch_audio_download.sh
+chmod +x batch_audio_download
 ```
 
-You only need to do this once. The script can then be run directly with `./batch_audio_download.sh`.
+You only need to do this once. The script can then be run directly with `./batch_audio_download`.
 
 ## Configuration
 
-Edit the configuration values near the top of `batch_audio_download.sh`:
+Edit the configuration values near the top of `batch_audio_download`:
 
 ```bash
 OUTPUT_DIR="./downloaded-stuff/my-files"
@@ -84,14 +84,14 @@ Only one `AUDIO_FORMAT` assignment should be active at a time.
 ### Download one video
 
 ```bash
-./batch_audio_download.sh \
+./batch_audio_download \
     "https://somesite.org/video/videoname-here/"
 ```
 
 ### Download several videos
 
 ```bash
-./batch_audio_download.sh \
+./batch_audio_download \
     "https://example.com/video-one" \
     "https://example.com/video-two" \
     "https://example.com/video-three"
@@ -113,7 +113,7 @@ Blank lines and lines beginning with `#` are ignored.
 Run the batch:
 
 ```bash
-./batch_audio_download.sh urls.txt
+./batch_audio_download urls.txt
 ```
 
 ## Example Output
