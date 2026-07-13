@@ -1,0 +1,5 @@
+# url.txt
+# blank lines and lines beginning with # are ignored
+https://somedomain.org/video/the-name-of-something/
+https://somedomain.org/video/the-name-of-anotherthing/
+https://someotherdomain.org/video/the-name-of-something/

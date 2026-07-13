@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+
+# batch_audio_download
+#
+# Usage:
+#   ./batch_audio_download URL1 URL2 URL3 ...
+#
+# Example:
+#   ./batch_audio_download \
+#     "https://www.youtube.com/watch?v=VIDEO_ID_1" \
+#     "https://www.youtube.com/watch?v=VIDEO_ID_2"
+#
+# OR specify a file containing URLs (one per line):
+#   ./batch_audio_download urls.txt    
+###########################################################################
+
+set -uo pipefail
+
+# Configuration
+OUTPUT_DIR="./your_dir/my-originals"
+AUDIO_FORMAT="wav"
+
+usage() {
+    echo "Usage:"
+    echo "  $0 <url1> [url2 ...]"
+    echo "  $0 <url-file>"
+    echo
+    echo "Examples:"
+    echo "  $0 \"https://youtu.be/abc123\""
+    echo "  $0 \"https://youtu.be/abc123\" \"https://youtu.be/def456\""
+    echo "  $0 urls.txt"
+}
+
+if [[ $# -eq 0 ]]; then
+    usage
+    exit 1
+fi
+
+if ! command -v yt-dlp >/dev/null 2>&1; then
+    echo "Error: yt-dlp is not installed or not in PATH."
+    exit 1
+fi
+
+if ! command -v ffmpeg >/dev/null 2>&1; then
+    echo "Error: ffmpeg is not installed or not in PATH."
+    echo "yt-dlp needs ffmpeg to extract and convert audio."
+    exit 1
+fi
+
+mkdir -p "$OUTPUT_DIR"
+
+URLS=()
+
+# If the sole argument is an existing file, read URLs from it.
+if [[ $# -eq 1 && -f "$1" ]]; then
+    URL_FILE="$1"
+
+    echo "Reading URLs from: $URL_FILE"
+
+    while IFS= read -r URL || [[ -n "$URL" ]]; do
+        # Remove a trailing carriage return from Windows-formatted files.
+        URL="${URL%$'\r'}"
+
+        # Skip blank lines and comments, including those with leading spaces.
+        if [[ -z "${URL//[[:space:]]/}" ||
+              "$URL" =~ ^[[:space:]]*# ]]; then
+            continue
+        fi
+
+        URLS+=("$URL")
+    done < "$URL_FILE"
+else
+    # Otherwise, treat every argument as a URL.
+    URLS=("$@")
+fi
+
+TOTAL=${#URLS[@]}
+
+if [[ "$TOTAL" -eq 0 ]]; then
+    echo "Error: No URLs were provided."
+    exit 1
+fi
+
+echo "Saving $AUDIO_FORMAT audio files to: $OUTPUT_DIR"
+echo "URLs to process: $TOTAL"
+echo
+
+COUNT=0
+SUCCEEDED=0
+FAILED=0
+
+for URL in "${URLS[@]}"; do
+    COUNT=$((COUNT + 1))
+
+    echo "----------------------------------------"
+    echo "[$COUNT/$TOTAL] Processing:"
+    echo "$URL"
+    echo
+
+    if yt-dlp \
+        -x \
+        --audio-format "$AUDIO_FORMAT" \
+        -o "$OUTPUT_DIR/-%(title)s.%(ext)s" \
+        "$URL"
+    then
+        SUCCEEDED=$((SUCCEEDED + 1))
+        echo
+        echo "[$COUNT/$TOTAL] Complete: $URL"
+    else
+        FAILED=$((FAILED + 1))
+        echo
+        echo "[$COUNT/$TOTAL] FAILED: $URL" >&2
+    fi
+
+    echo
+done
+
+echo "========================================"
+echo "Batch processing complete."
+echo "Succeeded: $SUCCEEDED"
+echo "Failed:    $FAILED"
+echo "Total:     $TOTAL"
+
+if [[ "$FAILED" -gt 0 ]]; then
+    exit 1
+fi
